@@ -6,8 +6,8 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import com.ps.employeepayroll.model.User;
-import com.ps.employeepayroll.service.UserService;
+import com.ps.employeepayroll.model.Employee;
+import com.ps.employeepayroll.service.EmployeeService;
 
 import jakarta.validation.Valid;
 
@@ -16,7 +16,7 @@ import jakarta.validation.Valid;
 public class AuthController {
 
     @Autowired
-    private UserService userService;
+    private EmployeeService userService;
 
     @GetMapping("/")
     public String index() {
@@ -25,18 +25,18 @@ public class AuthController {
 
     @GetMapping("/signup")
     public String signupForm(Model model) {
-        model.addAttribute("user", new User());
+        model.addAttribute("user", new Employee());
         return "signup";
     }
 
     @PostMapping("/signup")
-    public String signup(@Valid @ModelAttribute("user") User user, BindingResult result, Model model) {
+    public String signup(@Valid @ModelAttribute("user") Employee user, BindingResult result, Model model) {
         if (result.hasErrors()) {
             return "signup";
         }
 
         try {
-            userService.registerUser(user);
+            userService.registerEmployee(user);
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
             return "signup";

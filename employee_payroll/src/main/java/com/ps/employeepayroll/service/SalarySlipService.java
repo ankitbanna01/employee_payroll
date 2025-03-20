@@ -3,6 +3,8 @@ package com.ps.employeepayroll.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.ps.employeepayroll.exception.EmployeeNotFoundException;
+import com.ps.employeepayroll.exception.SalarySlipNotFoundException;
 import com.ps.employeepayroll.model.Employee;
 import com.ps.employeepayroll.model.SalarySlip;
 import com.ps.employeepayroll.repository.EmployeeRepository;
@@ -19,34 +21,38 @@ public class SalarySlipService {
     @Autowired
     private EmployeeRepository employeeRepository;
 
+    private static final double TAX_PERCENTAGE = 0.1; // 🔹 Move tax percentage to a constant
+
     public List<SalarySlip> getAllSalarySlips() {
         return salarySlipRepository.findAll();
     }
 
-    public SalarySlip getSalarySlipByEmployeeId(Long employeeId) {
-        return salarySlipRepository.findByEmployeeId(employeeId)
-                .orElseThrow(() -> new RuntimeException("Salary slip not found for Employee ID: " + employeeId));
+    public SalarySlip getSalarySlipByEmployeeId(String employeeId) {
+        return salarySlipRepository.findByEmployee_EmployeeId(employeeId)
+                .orElseThrow(
+                        () -> new SalarySlipNotFoundException("Salary slip not found for Employee ID: " + employeeId));
     }
 
-    public SalarySlip generateSalarySlip(Long employeeId, double baseSalary) {
-        Employee employee = employeeRepository.findById(employeeId)
-                .orElseThrow(() -> new RuntimeException("Employee not found"));
+    public SalarySlip generateSalarySlip(String employeeId, double baseSalary) {
+        Employee employee = employeeRepository.findByEmployeeId(employeeId)
+                .orElseThrow(() -> new EmployeeNotFoundException("Employee not found with ID: " + employeeId));
 
         SalarySlip salarySlip = new SalarySlip();
         salarySlip.setEmployee(employee);
         salarySlip.setBaseSalary(baseSalary);
-        salarySlip.setTaxAmount(baseSalary * 0.1); // 10% Tax
+        salarySlip.setTaxAmount(baseSalary * TAX_PERCENTAGE);
         salarySlip.setNetSalary(baseSalary - salarySlip.getTaxAmount());
         salarySlip.setGeneratedDate(LocalDate.now());
 
         return salarySlipRepository.save(salarySlip);
     }
 
-    public SalarySlip updateSalarySlip(Long employeeId, double newBaseSalary) {
+    public SalarySlip updateSalarySlip(String employeeId, double newBaseSalary) {
         SalarySlip salarySlip = getSalarySlipByEmployeeId(employeeId);
         salarySlip.setBaseSalary(newBaseSalary);
-        salarySlip.setTaxAmount(newBaseSalary * 0.1);
+        salarySlip.setTaxAmount(newBaseSalary * TAX_PERCENTAGE);
         salarySlip.setNetSalary(newBaseSalary - salarySlip.getTaxAmount());
+
         return salarySlipRepository.save(salarySlip);
     }
 }

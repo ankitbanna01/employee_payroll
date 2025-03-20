@@ -15,7 +15,7 @@ public class Salary {
     private Long id;
 
     @OneToOne
-    @JoinColumn(name = "employee_id", nullable = false)
+    @JoinColumn(name = "employee_id", referencedColumnName = "id")
     private Employee employee;
 
     private double baseSalary;

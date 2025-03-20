@@ -1,24 +1,47 @@
 package com.ps.employeepayroll.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
-@Getter
-@Setter
-@NoArgsConstructor
+@Data
 @AllArgsConstructor
-@Table(name = "employees")
-@SequenceGenerator(name = "emp_seq", sequenceName = "employee_seq", allocationSize = 1)
+@NoArgsConstructor
 public class Employee {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "emp_seq")
-    private Long id;
+    private String employeeId; // Unique ID for the employee
 
-    @NotBlank(message = "Employee name is required")
     private String name;
-
-    @NotBlank(message = "Designation is required")
+    private String email;
+    private String phoneNumber;
+    private String profilePic;
     private String designation;
+    private String password;
+
+    @Enumerated(EnumType.STRING) // ✅ Store as String in DB but use Enum in Java
+    @Column(nullable = false)
+    private Role role = Role.USER; // ✅ Default role as EMPLOYEE
+
+    private double salary;
+    private String salarySlipUrl;
+
+    @ManyToOne
+    @JoinColumn(name = "admin_id")
+    private Admin admin;
+
+    public double viewSalary() {
+        return this.salary;
+    }
+
+    public String downloadSalarySlip() {
+        return this.salarySlipUrl;
+    }
+
+    // ✅ Define Enum Inside or Outside the Class
+    public enum Role {
+        USER, ADMIN
+    }
 }

@@ -8,10 +8,10 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-
+// Fixed package name
 import com.ps.employeepayroll.Form.LoginForm;
-import com.ps.employeepayroll.model.User;
-import com.ps.employeepayroll.service.UserService;
+import com.ps.employeepayroll.model.Employee;
+import com.ps.employeepayroll.service.EmployeeService;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -19,7 +19,7 @@ import jakarta.servlet.http.HttpSession;
 public class LoginController {
 
     @Autowired
-    private UserService userService;
+    private EmployeeService userService;
 
     @GetMapping("/auth/login")
     public String loginPage(@RequestParam(required = false) String role, Model model) {
@@ -31,13 +31,13 @@ public class LoginController {
     @PostMapping("/login")
     public String login(@RequestParam String email, @RequestParam String password, HttpSession session, Model model) {
         try {
-            User user = userService.authenticateUser(email, password);
+            Employee user = userService.authenticateUser(email, password);
 
             // ✅ Store user info in session
             session.setAttribute("loggedUser", user);
 
             // ✅ Redirect based on role
-            if (user.getRole() == User.Role.ADMIN) {
+            if (user.getRole() == Employee.Role.ADMIN) {
                 return "redirect:/admin/dashboard";
             } else {
                 return "redirect:/user/dashboard";
@@ -52,16 +52,24 @@ public class LoginController {
     // ✅ Google OAuth2 Login Handling
     @GetMapping("/oauth2/callback")
     public String googleLogin(@AuthenticationPrincipal OAuth2User oauthUser, HttpSession session) {
+        if (oauthUser == null) {
+            return "redirect:/auth/login?error=oauth";
+        }
+
         String email = oauthUser.getAttribute("email");
         String name = oauthUser.getAttribute("name");
 
-        User user = userService.findOrCreateGoogleUser(email, name);
+        if (email == null || name == null) {
+            return "redirect:/auth/login?error=missing_info";
+        }
+
+        Employee user = userService.findOrCreateGoogleUser(email, name);
 
         // ✅ Store user info in session
         session.setAttribute("loggedUser", user);
 
         // ✅ Redirect based on role
-        if (user.getRole() == User.Role.ADMIN) {
+        if (user.getRole() == Employee.Role.ADMIN) {
             return "redirect:/admin/dashboard";
         } else {
             return "redirect:/user/dashboard";

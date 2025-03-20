@@ -10,8 +10,9 @@ import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.web.DefaultRedirectStrategy;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
-import com.ps.employeepayroll.model.User;
-import com.ps.employeepayroll.repository.UserRepository;
+
+import com.ps.employeepayroll.model.Employee;
+import com.ps.employeepayroll.repository.EmployeeRepository;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -22,7 +23,7 @@ public class OAuthenticationSuccessHandler implements AuthenticationSuccessHandl
     Logger logger = LoggerFactory.getLogger(OAuthenticationSuccessHandler.class);
 
     @Autowired
-    private UserRepository userRepository;
+    private EmployeeRepository userRepository;
 
     @Override
     public void onAuthenticationSuccess(
@@ -53,15 +54,15 @@ public class OAuthenticationSuccessHandler implements AuthenticationSuccessHandl
         }
 
         // Check if the user already exists
-        User user = userRepository.findByEmail(email).orElse(null);
+        Employee user = userRepository.findByEmail(email).orElse(null);
 
         if (user == null) {
             // Register new user
-            user = new User();
+            user = new Employee();
             user.setName(name);
             user.setEmail(email);
             user.setPassword(""); // No password required for OAuth users
-            user.setRole(User.Role.USER); // Default role
+            user.setRole(Employee.Role.USER); // Default role
             userRepository.save(user);
             logger.info("New OAuth user registered: " + email);
         } else {
@@ -72,7 +73,7 @@ public class OAuthenticationSuccessHandler implements AuthenticationSuccessHandl
         }
 
         // Redirect based on user role
-        if (user.getRole() == User.Role.ADMIN) {
+        if (user.getRole() == Employee.Role.ADMIN) {
             new DefaultRedirectStrategy().sendRedirect(request, response, "/admin/dashboard");
         } else {
             new DefaultRedirectStrategy().sendRedirect(request, response, "/user/dashboard");

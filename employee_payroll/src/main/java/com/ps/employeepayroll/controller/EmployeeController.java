@@ -1,27 +1,42 @@
 package com.ps.employeepayroll.controller;
 
-import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
+import com.ps.employeepayroll.exception.EmployeeNotFoundException;
 import com.ps.employeepayroll.model.Employee;
 import com.ps.employeepayroll.service.EmployeeService;
-
-import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/employees")
+@RequestMapping("/employee")
 public class EmployeeController {
+
     @Autowired
     private EmployeeService employeeService;
 
-    @PostMapping("/add")
-    public Employee addEmployee(@Valid @RequestBody Employee employee) {
-        return employeeService.addEmployee(employee);
+    /**
+     * ✅ View salary (Only accessible by the employee themselves)
+     */
+    @GetMapping("/salary")
+    public ResponseEntity<Double> viewSalary(@AuthenticationPrincipal UserDetails userDetails) {
+        String email = userDetails.getUsername();
+        Employee employee = employeeService.getEmployeeByEmail(email)
+                .orElseThrow(() -> new EmployeeNotFoundException("Employee not found"));
+
+        return ResponseEntity.ok(employee.getSalary());
     }
 
-    @GetMapping("/")
-    public List<Employee> getAllEmployees() {
-        return employeeService.getAllEmployees();
+    /**
+     * ✅ Download salary slip (Only accessible by the employee themselves)
+     */
+    @GetMapping("/salary-slip")
+    public ResponseEntity<String> downloadSalarySlip(@AuthenticationPrincipal UserDetails userDetails) {
+        String email = userDetails.getUsername();
+        Employee employee = employeeService.getEmployeeByEmail(email)
+                .orElseThrow(() -> new EmployeeNotFoundException("Employee not found"));
+
+        return ResponseEntity.ok(employee.getSalarySlipUrl());
     }
 }
