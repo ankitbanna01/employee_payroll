@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salary Slip Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100">
+
+    <!-- Navbar -->
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+
+    <div class="container mx-auto mt-10">
+        <h1 class="text-3xl font-bold text-center">Salary Slip Management</h1>
+
+        <!-- Search Employee -->
+        <div class="mt-5">
+            <form action="/admin/salary-slips" method="get" class="flex justify-center">
+                <input type="number" name="employeeId" placeholder="Enter Employee ID" required
+                    class="px-4 py-2 border border-gray-300 rounded-l-md focus:outline-none">
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-r-md hover:bg-blue-600">
+                    Search
+                </button>
+            </form>
+        </div>
+
+        <!-- Salary Slip Details -->
+        <div class="mt-10 bg-white p-5 shadow-md rounded-md w-1/2 mx-auto" th:if="${salarySlip != null}">
+            <h2 class="text-xl font-semibold text-center">Salary Slip for Employee:
+                <span th:text="${salarySlip.employee.name}"></span>
+            </h2>
+            <p><strong>Designation:</strong> <span th:text="${salarySlip.employee.designation}"></span></p>
+            <p><strong>Base Salary:</strong> $<span th:text="${salarySlip.baseSalary}"></span></p>
+            <p><strong>Tax Amount:</strong> $<span th:text="${salarySlip.taxAmount}"></span></p>
+            <p><strong>Net Salary:</strong> $<span th:text="${salarySlip.netSalary}"></span></p>
+            <p><strong>Generated Date:</strong> <span th:text="${salarySlip.generatedDate}"></span></p>
+
+            <!-- Update Salary Slip -->
+            <form action="/admin/salary-slips/update" method="post" class="mt-4">
+                <input type="hidden" name="employeeId" th:value="${salarySlip.employee.id}">
+                <input type="number" name="newBaseSalary" placeholder="Enter New Salary" required
+                    class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none w-full">
+                <button type="submit"
+                    class="bg-green-500 text-white px-4 py-2 mt-2 w-full rounded-md hover:bg-green-600">
+                    Update Salary Slip
+                </button>
+            </form>
+
+            <!-- Export PDF -->
+            <a th:href="@{/admin/salary-slips/export/{employeeId}(employeeId=${salarySlip.employee.id})}"
+                class="bg-red-500 text-white px-4 py-2 mt-3 block text-center rounded-md hover:bg-red-600">
+                Export as PDF
+            </a>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div th:replace="~{fragments/footer :: footer}"></div>
+
+</body>
+
+</html>

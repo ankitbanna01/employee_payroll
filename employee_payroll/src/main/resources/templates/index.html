@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" th:replace="~{base :: parent(~{::#content},~{::title},~{::script})}"
+    xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Payroll System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer th:src="@{/js/formValidation.js}"></script>
+</head>
+
+<body
+    class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white flex flex-col min-h-screen transition-colors duration-300">
+
+    <!-- Navbar -->
+    <div th:replace="~{navbar :: navbar}"></div>
+
+    <!-- Main Content -->
+    <div id="content" class="flex-grow flex items-center justify-center px-4">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg text-center w-full max-w-md">
+            <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Welcome to Payroll System</h1>
+            <p class="text-gray-600 dark:text-gray-300 mt-2">Choose your role to continue</p>
+
+            <div class="mt-6">
+                <a th:href="@{/auth/login(role='admin')}"
+                    class="block bg-blue-500 text-white py-2 px-4 rounded mt-4 hover:bg-blue-600 transition duration-300">
+                    Login as Admin
+                </a>
+                <a th:href="@{/auth/login(role='user')}"
+                    class="block bg-green-500 text-white py-2 px-4 rounded mt-2 hover:bg-green-600 transition duration-300">
+                    Login as User
+                </a>
+            </div>
+
+            <div class="mt-4">
+                <p class="text-sm text-gray-500 dark:text-gray-300">Don't have an account?</p>
+                <a th:href="@{/auth/signup}" class="text-blue-500 dark:text-blue-400 hover:underline">Sign up here</a>
+            </div>
+
+            <!-- Theme Toggle Button -->
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div th:replace="~{footer :: footer}"></div>
+
+    <!-- JavaScript for Theme Toggle -->
+    <script>
+        function toggleTheme() {
+            let html = document.documentElement;
+            let themeButton = document.getElementById("theme_toggle");
+            let themeText = document.getElementById("theme_text");
+
+            if (html.classList.contains("dark")) {
+                html.classList.remove("dark");
+                localStorage.setItem("theme", "light");
+                themeText.innerText = "Light Mode";
+            } else {
+                html.classList.add("dark");
+                localStorage.setItem("theme", "dark");
+                themeText.innerText = "Dark Mode";
+            }
+        }
+
+        // Apply saved theme on page load
+        document.addEventListener("DOMContentLoaded", function () {
+            if (localStorage.getItem("theme") === "dark") {
+                document.documentElement.classList.add("dark");
+                document.getElementById("theme_text").innerText = "Dark Mode";
+            }
+            document.getElementById("theme_toggle").addEventListener("click", toggleTheme);
+        });
+    </script>
+
+</body>
+
+</html>
