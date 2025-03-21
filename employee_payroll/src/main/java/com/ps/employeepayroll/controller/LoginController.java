@@ -1,57 +1,66 @@
 package com.ps.employeepayroll.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-// Fixed package name
-import com.ps.employeepayroll.Form.LoginForm;
+import org.springframework.web.bind.annotation.*;
+
 import com.ps.employeepayroll.model.Employee;
 import com.ps.employeepayroll.service.EmployeeService;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import java.util.Optional;
 
 @Controller
 public class LoginController {
 
     @Autowired
-    private EmployeeService userService;
+    private EmployeeService employeeService;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    // ✅ Show Login Page
     @GetMapping("/auth/login")
     public String loginPage(@RequestParam(required = false) String role, Model model) {
-        model.addAttribute("role", role); // Pass role to the login page
-        model.addAttribute("loginForm", new LoginForm()); // Add LoginForm to the model
-        return "login"; // Render the login page
+        model.addAttribute("role", (role != null) ? role : "USER");
+        model.addAttribute("loginForm", new Employee());
+        return "login";
     }
 
-    @PostMapping("/login")
-    public String login(@RequestParam String email, @RequestParam String password, HttpSession session, Model model) {
-        try {
-            Employee user = userService.authenticateUser(email, password);
+    @PostMapping("/auth/login")
+    public String login(@RequestParam String username, @RequestParam String password, HttpServletRequest request) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(username, password));
 
-            // ✅ Store user info in session
-            session.setAttribute("loggedUser", user);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            // ✅ Redirect based on role
-            if (user.getRole() == Employee.Role.ADMIN) {
-                return "redirect:/admin/dashboard";
-            } else {
-                return "redirect:/user/dashboard";
-            }
-
-        } catch (Exception e) {
-            model.addAttribute("error", "Invalid email or password");
-            return "login";
+        // After login, check the user's role
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        if (userDetails.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))) {
+            // Redirect to admin dashboard
+            return "redirect:/admin/dashboard";
+        } else {
+            // Redirect to user dashboard
+            return "redirect:/user/dashboard";
         }
     }
 
-    // ✅ Google OAuth2 Login Handling
-    @GetMapping("/oauth2/callback")
-    public String googleLogin(@AuthenticationPrincipal OAuth2User oauthUser, HttpSession session) {
+    @GetMapping("/login/oauth2/code/google")
+    public String googleCallback(@AuthenticationPrincipal OAuth2User oauthUser, HttpSession session) {
         if (oauthUser == null) {
             return "redirect:/auth/login?error=oauth";
         }
@@ -63,19 +72,24 @@ public class LoginController {
             return "redirect:/auth/login?error=missing_info";
         }
 
-        Employee user = userService.findOrCreateGoogleUser(email, name);
+        // Debugging: Print received Google user info (Remove in production)
+        System.out.println("Google Login - Email: " + email + ", Name: " + name);
 
-        // ✅ Store user info in session
+        // Find or create user (with role assignment)
+        Employee user = employeeService.findOrCreateGoogleUser(email, name);
+
+        if (user == null) {
+            return "redirect:/auth/login?error=user_not_found";
+        }
+
         session.setAttribute("loggedUser", user);
 
-        // ✅ Redirect based on role
-        if (user.getRole() == Employee.Role.ADMIN) {
-            return "redirect:/admin/dashboard";
-        } else {
-            return "redirect:/user/dashboard";
-        }
+        // Ensure role check works correctly
+        String role = user.getRole() != null ? user.getRole().toString() : "";
+        return role.equals("ADMIN") ? "redirect:/admin/dashboard" : "redirect:/user/dashboard";
     }
 
+    // ✅ Logout
     @GetMapping("/logout")
     public String logout(HttpSession session) {
         session.invalidate();

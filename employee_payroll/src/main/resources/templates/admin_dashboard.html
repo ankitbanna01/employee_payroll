@@ -1,15 +1,109 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" th:replace="~{base :: parent(~{::#content},~{::title},~{::script})}">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Add Employee</title>
 </head>
 
-<body class="flex items-center justify-center h-screen bg-gray-100">
-    <h1 class="text-3xl font-bold">Welcome to Admin Dashboard</h1>
+<body>
+    <div id="content" class="mt-20 overflow-y-auto">
+        <!-- Sidebar -->
+        <div th:if="${loggedInUser}">
+            <div th:replace="~{user/sidebar :: sidebar}"></div>
+        </div>
+
+        <div class="sm:pl-64 mt-20" style="height: 1000px">
+            <div class="grid grid-cols-12">
+                <div class="col-span-3"></div>
+                <div class="col-span-12 md:col-span-6">
+                    <div class="card block p-6 bg-white border border-gray-200 rounded-lg shadow">
+                        <div th:replace="~{message :: messagebox}"></div>
+
+                        <h1 class="text-2xl font-semibold">Add New Employee</h1>
+                        <p class="text-gray-500">
+                            This employee information will be stored in the system.
+                        </p>
+
+                        <form class="mt-8" th:action="@{'/admin/dashboard'}" th:object="${employeeForm}" method="post"
+                            enctype="multipart/form-data">
+
+                            <!-- Employee Name -->
+                            <div class="mb-3">
+                                <label class="block mb-2 text-sm font-medium">Employee Name</label>
+                                <div class="relative">
+                                    <input th:field="*{name}" type="text" class="input-field"
+                                        placeholder="Employee Name" required />
+                                </div>
+                                <p class="text-red-500" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></p>
+                            </div>
+
+                            <!-- Employee Email -->
+                            <div class="mb-3">
+                                <label class="block mb-2 text-sm font-medium">Employee Email</label>
+                                <div class="relative">
+                                    <input type="email" th:field="*{email}" class="input-field"
+                                        placeholder="employee@example.com" required />
+                                </div>
+                                <p class="text-red-500" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></p>
+                            </div>
+
+                            <!-- Employee Designation -->
+                            <div class="mb-3">
+                                <label class="block mb-2 text-sm font-medium">Designation</label>
+                                <div class="relative">
+                                    <input th:field="*{designation}" type="text" class="input-field"
+                                        placeholder="e.g., Software Engineer" required />
+                                </div>
+                                <p class="text-red-500" th:if="${#fields.hasErrors('designation')}"
+                                    th:errors="*{designation}"></p>
+                            </div>
+
+                            <!-- Employee Salary -->
+                            <div class="mb-3">
+                                <label class="block mb-2 text-sm font-medium">Salary</label>
+                                <div class="relative">
+                                    <input th:field="*{salary}" type="number" class="input-field" placeholder="50000"
+                                        required />
+                                </div>
+                                <p class="text-red-500" th:if="${#fields.hasErrors('salary')}" th:errors="*{salary}">
+                                </p>
+                            </div>
+
+                            <!-- Employee Photo -->
+                            <div class="mb-3">
+                                <label class="block mb-2 text-sm font-medium">Upload Photo</label>
+                                <input id="image_file_input" th:field="*{photo}" type="file" class="file-input"
+                                    accept="image/*" />
+                                <p class="text-red-500" th:if="${#fields.hasErrors('photo')}" th:errors="*{photo}"></p>
+                                <img id="upload_image_preview" class="max-h-52 mx-auto rounded-lg shadow m-3" src=""
+                                    alt="Preview" />
+                            </div>
+
+                            <!-- Buttons -->
+                            <div class="text-center">
+                                <button type="submit" class="btn-primary">Add Employee</button>
+                                <button type="reset" class="btn-secondary">Reset</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- External JS -->
+    <script data-th-src="@{'/js/admin.js'}"></script>
+
+    <!-- Image Preview Script -->
+    <script>
+        document.getElementById("image_file_input").addEventListener("change", function (event) {
+            const reader = new FileReader();
+            reader.onload = function () {
+                document.getElementById("upload_image_preview").src = reader.result;
+            };
+            reader.readAsDataURL(event.target.files[0]);
+        });
+    </script>
 </body>
 
 </html>

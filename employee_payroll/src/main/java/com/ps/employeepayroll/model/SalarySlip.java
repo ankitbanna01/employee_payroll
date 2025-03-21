@@ -1,15 +1,10 @@
 package com.ps.employeepayroll.model;
 
 import jakarta.persistence.*;
-import lombok.*;
-
-import java.time.LocalDate;
+import lombok.Data;
 
 @Entity
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Data
 @Table(name = "salary_slips")
 public class SalarySlip {
 
@@ -17,12 +12,28 @@ public class SalarySlip {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
-    @JoinColumn(name = "employee_id", referencedColumnName = "id")
-    private Employee employee;
-
-    private double baseSalary;
+    private double basicSalary;
     private double taxAmount;
     private double netSalary;
-    private LocalDate generatedDate;
+
+    @OneToOne
+    @JoinColumn(name = "employee_id")
+    private Employee employee;
+
+    public SalarySlip() {
+    }
+
+    public SalarySlip(double basicSalary, double taxAmount, double netSalary, Employee employee) {
+        this.basicSalary = basicSalary;
+        this.taxAmount = taxAmount;
+        this.netSalary = netSalary;
+        this.employee = employee;
+    }
+
+    public Object getGeneratedDate() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getGeneratedDate'");
+    }
+
+    // Getters and Setters
 }

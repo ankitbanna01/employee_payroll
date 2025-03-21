@@ -4,5 +4,5 @@ public enum Provider {
     GOOGLE,
     GITHUB,
     LINKEDIN,
-    LOCAL
+    LOCAL, UNKNOWN
 }

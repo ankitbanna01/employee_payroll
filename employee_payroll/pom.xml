@@ -11,7 +11,7 @@
 	<groupId>com.scm</groupId>
 	<artifactId>scm1.0</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>scm1.0</name>
+	<name>employee_payroll</name>
 	<description>Demo project for Spring Boot</description>
 	<url/>
 	<licenses>

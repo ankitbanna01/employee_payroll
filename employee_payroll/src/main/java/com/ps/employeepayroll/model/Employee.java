@@ -12,36 +12,28 @@ import lombok.NoArgsConstructor;
 public class Employee {
 
     @Id
-    private String employeeId; // Unique ID for the employee
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+
+    private Long employeeId; // Primary key column
 
     private String name;
+    @Column(unique = true) // Enforce uniqueness at the database level
     private String email;
     private String phoneNumber;
     private String profilePic;
     private String designation;
     private String password;
 
-    @Enumerated(EnumType.STRING) // ✅ Store as String in DB but use Enum in Java
-    @Column(nullable = false)
-    private Role role = Role.USER; // ✅ Default role as EMPLOYEE
+    @Enumerated(EnumType.STRING)
+    private Role role;
 
-    private double salary;
-    private String salarySlipUrl;
+    @OneToOne(mappedBy = "employee", cascade = CascadeType.ALL)
+    private SalarySlip salarySlip;
 
-    @ManyToOne
-    @JoinColumn(name = "admin_id")
-    private Admin admin;
+    @Enumerated(EnumType.STRING)
+    private Provider provider;
 
-    public double viewSalary() {
-        return this.salary;
-    }
-
-    public String downloadSalarySlip() {
-        return this.salarySlipUrl;
-    }
-
-    // ✅ Define Enum Inside or Outside the Class
-    public enum Role {
-        USER, ADMIN
+    public void setPassword(String password) {
+        this.password = password; // Store plain text temporarily
     }
 }

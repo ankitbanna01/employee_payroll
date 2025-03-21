@@ -1,11 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" th:replace="~{base :: parent(~{::#content},~{::title},~{::script})}"
-    xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{base :: parent(~{::#content}, 'Sign Up', ~{::script})}">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
@@ -14,51 +13,49 @@
         <div class="grid grid-cols-12 mt-4">
             <div class="col-span-4 md:col-span-2 lg:col-span-3 xl:col-span-4"></div>
             <div class="col-span-12 md:col-span-8 lg:col-span-6 xl:col-span-4">
-                <!-- card -->
-                <div th:replace="~{message::messagebox}"></div>
 
-                <div
-                    class="block p-6 border-t-[10px] border-blue-700 bg-white rounded-xl shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-blue-700 dark:hover:bg-gray-700">
+                <div th:if="${error}" class="text-red-500 text-center mb-4">
+                    <p th:text="${error}"></p>
+                </div>
 
-                    <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-                        Signup Here
-                    </h5>
+                <div th:insert="message :: messagebox"></div>
 
-                    <form id="signupForm" th:action="@{/auth/login}" method="post" onsubmit="return validateSignup()">
+                <div class="p-6 border-t-[10px] border-blue-700 bg-white rounded-xl shadow-lg">
+                    <h5 class="mb-4 text-2xl font-bold text-gray-900">Signup Here</h5>
 
-                        <!-- Name Field -->
+                    <form id="signupForm" th:action="@{/auth/signup}" method="post" onsubmit="return validateSignup()">
                         <div class="mb-3">
                             <input type="text" id="name" name="name" placeholder="Full Name"
-                                class="border w-full p-3 rounded focus:ring-2 focus:ring-blue-500 transition">
+                                class="border w-full p-3 rounded focus:ring-2 focus:ring-blue-500">
                             <p id="nameError" class="text-red-500 text-sm hidden">Name should contain only letters.</p>
                         </div>
 
-                        <!-- Email Field -->
                         <div class="mb-3">
                             <input type="email" id="email" name="email" placeholder="Email"
-                                class="border w-full p-3 rounded focus:ring-2 focus:ring-blue-500 transition">
+                                class="border w-full p-3 rounded focus:ring-2 focus:ring-blue-500">
                             <p id="emailError" class="text-red-500 text-sm hidden">Enter a valid email.</p>
                         </div>
 
-                        <!-- Password Field -->
-                        <div class="mb-3">
+                        <div class="mb-3 relative">
                             <input type="password" id="password" name="password" placeholder="Password"
-                                class="border w-full p-3 rounded focus:ring-2 focus:ring-blue-500 transition">
-                            <p id="passwordError" class="text-red-500 text-sm hidden">
-                                Password must be at least 8 characters, contain one uppercase letter, one number, and
-                                one special character.
-                            </p>
+                                class="border w-full p-3 rounded focus:ring-2 focus:ring-blue-500 pr-10">
+                            <button type="button" onclick="togglePassword()"
+                                class="absolute right-3 top-3 text-gray-600">👁️</button>
+                            <p id="passwordError" class="text-red-500 text-sm hidden">Password must be 8+ characters, 1
+                                uppercase, 1 number, 1 special character.</p>
                         </div>
 
-                        <!-- Role Selection -->
                         <div class="mb-3">
                             <select id="role" name="role"
-                                class="border w-full p-3 rounded focus:ring-2 focus:ring-blue-500 transition">
+                                class="border w-full p-3 rounded focus:ring-2 focus:ring-blue-500"
+                                onchange="checkAdmin()">
                                 <option value="">Select Role</option>
                                 <option value="USER">User</option>
                                 <option value="ADMIN">Admin</option>
                             </select>
                             <p id="roleError" class="text-red-500 text-sm hidden">Please select a role.</p>
+                            <p id="adminExistsError" class="text-red-500 text-sm hidden">Admin exists. <a
+                                    href="/auth/login" class="text-blue-600 underline">Login</a></p>
                         </div>
 
                         <button type="submit"
@@ -66,63 +63,51 @@
                             Sign Up
                         </button>
                     </form>
-                    <p class="mt-4 text-center text-gray-600">Already have an account?
-                        <a href="/auth/login" class="text-blue-600 hover:underline">Login</a>
-                    </p>
+
+                    <p class="mt-4 text-center text-gray-600">Already have an account? <a href="/auth/login"
+                            class="text-blue-600 hover:underline">Login</a></p>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
+    <script id="script">
         function validateSignup() {
             let isValid = true;
+            document.querySelectorAll(".text-red-500").forEach(el => el.classList.add("hidden"));
 
-            // Name Validation
             const name = document.getElementById("name").value.trim();
-            const nameError = document.getElementById("nameError");
             if (!/^[a-zA-Z\s]+$/.test(name)) {
-                nameError.classList.remove("hidden");
+                document.getElementById("nameError").classList.remove("hidden");
                 isValid = false;
-            } else {
-                nameError.classList.add("hidden");
             }
 
-            // Email Validation
             const email = document.getElementById("email").value.trim();
-            const emailError = document.getElementById("emailError");
             if (!/^\S+@\S+\.\S+$/.test(email)) {
-                emailError.classList.remove("hidden");
+                document.getElementById("emailError").classList.remove("hidden");
                 isValid = false;
-            } else {
-                emailError.classList.add("hidden");
             }
 
-            // Password Validation
             const password = document.getElementById("password").value.trim();
-            const passwordError = document.getElementById("passwordError");
             if (!/^(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/.test(password)) {
-                passwordError.classList.remove("hidden");
+                document.getElementById("passwordError").classList.remove("hidden");
                 isValid = false;
-            } else {
-                passwordError.classList.add("hidden");
             }
 
-            // Role Validation
             const role = document.getElementById("role").value;
-            const roleError = document.getElementById("roleError");
-            if (role === "") {
-                roleError.classList.remove("hidden");
+            if (!role) {
+                document.getElementById("roleError").classList.remove("hidden");
                 isValid = false;
-            } else {
-                roleError.classList.add("hidden");
             }
 
-            // Prevent form submission if validation fails
             return isValid;
         }
-    </script>
 
+        function togglePassword() {
+            const passwordField = document.getElementById("password");
+            passwordField.type = passwordField.type === "password" ? "text" : "password";
+        }
+    </script>
 </body>
 
 </html>

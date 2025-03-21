@@ -7,42 +7,36 @@ import com.ps.employeepayroll.utils.SalarySlipExporter;
 
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.util.List;
 
-@RestController
-@RequestMapping("/admin/salary-slips")
+@Controller
+@RequestMapping("/user/salary-slips")
 public class SalarySlipController {
 
     @Autowired
     private SalarySlipService salarySlipService;
 
-    @GetMapping
-    public List<SalarySlip> getAllSalarySlips() {
-        return salarySlipService.getAllSalarySlips();
+    @GetMapping("/")
+    public String getAllSalarySlips() {
+        return "admin_dashboard";
     }
 
+    // View all salary slips
+
+    // View salary slip by Employee ID
     @GetMapping("/{employeeId}")
-    public SalarySlip getSalarySlip(@PathVariable String employeeId) {
+    public SalarySlip getSalarySlip(@PathVariable Long employeeId) {
         return salarySlipService.getSalarySlipByEmployeeId(employeeId);
     }
 
-    @PostMapping("/{employeeId}")
-    public SalarySlip generateSalarySlip(@PathVariable String employeeId, @RequestParam double baseSalary) {
-        return salarySlipService.generateSalarySlip(employeeId, baseSalary);
-    }
-
-    @PutMapping("/{employeeId}")
-    public SalarySlip updateSalarySlip(@PathVariable String employeeId, @RequestParam double newBaseSalary) {
-        return salarySlipService.updateSalarySlip(employeeId, newBaseSalary);
-    }
-
+    // Export salary slip to PDF
     @GetMapping("/export/{employeeId}")
-    public void exportSalarySlip(@PathVariable String employeeId, HttpServletResponse response)
+    public void exportSalarySlip(@PathVariable Long employeeId, HttpServletResponse response)
             throws IOException, DocumentException {
         SalarySlip salarySlip = salarySlipService.getSalarySlipByEmployeeId(employeeId);
-        SalarySlipExporter.exportSalarySlip(response, salarySlip);
+        SalarySlipExporter.exportSalarySlip(response, salarySlip); // Export logic
     }
 }

@@ -1,86 +1,100 @@
 package com.ps.employeepayroll.service;
 
+import com.ps.employeepayroll.exception.EmployeeNotFoundException;
+import com.ps.employeepayroll.model.Employee;
+import com.ps.employeepayroll.model.Role;
+import com.ps.employeepayroll.repository.AdminRepository;
+import com.ps.employeepayroll.repository.EmployeeRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.ps.employeepayroll.exception.EmployeeNotFoundException;
-import com.ps.employeepayroll.model.Admin;
-import com.ps.employeepayroll.model.Employee;
-import com.ps.employeepayroll.repository.EmployeeRepository;
-
-import jakarta.validation.Valid;
-
-import java.util.List;
 import java.util.Optional;
 
 @Service
 public class EmployeeService {
 
     @Autowired
-    private EmployeeRepository employeeRepository;
+    private AdminRepository adminRepository;
+    private final EmployeeRepository employeeRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    public EmployeeService(EmployeeRepository employeeRepository, PasswordEncoder passwordEncoder) {
+        this.employeeRepository = employeeRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    public Employee registerUser(Employee employee) {
+        // Encrypt password
+        employee.setPassword(passwordEncoder.encode(employee.getPassword()));
+
+        // Check if the employee is an admin and handle accordingly
+        if ("ADMIN".equals(employee.getRole())) {
+            // Handle Admin-specific logic if needed (you can save to a different repository
+            // or table if required)
+            return adminRepository.save(employee);
+        } else {
+            // Default to employee if role is USER
+            return employeeRepository.save(employee);
+        }
+    }
+
+    public Optional<Employee> authenticate(String email, String password) {
+        Optional<Employee> employee = employeeRepository.findByEmail(email);
+        if (employee.isPresent() && passwordEncoder.matches(password, employee.get().getPassword())) {
+            return employee;
+        }
+        return Optional.empty();
+    }
+
+    public Employee authenticateUser(String email, String rawPassword) throws Exception {
+        Optional<Employee> userOpt = employeeRepository.findByEmail(email);
+
+        if (userOpt.isPresent()) {
+            Employee user = userOpt.get();
+            // ✅ Compare encrypted password
+            if (passwordEncoder.matches(rawPassword, user.getPassword())) {
+                return user; // Successfully authenticated
+            }
+        }
+
+        throw new Exception("Invalid credentials");
+    }
 
     public Employee findOrCreateGoogleUser(String email, String name) {
-        Optional<Employee> optionalUser = employeeRepository.findByEmail(email);
+        Optional<Employee> userOpt = employeeRepository.findByEmail(email);
 
-        if (optionalUser.isPresent()) {
-            // ✅ User exists, return the existing user
-            return optionalUser.get();
-        } else {
-            // ✅ User does not exist, create a new user
-            Employee newUser = new Employee();
-            newUser.setEmail(email);
-            newUser.setName(name);
-            newUser.setRole(Employee.Role.USER); // Default role as USER
-
-            // ✅ Set a default password (Google users don't use passwords)
-            newUser.setPassword(passwordEncoder.encode("google_auth_user"));
-
-            // ✅ Save the new user to the database
-            return employeeRepository.save(newUser);
-        }
-    }
-
-    /**
-     * Authenticates the user based on email and password.
-     *
-     * @param email    The user's email
-     * @param password The user's entered password
-     * @return The authenticated Employee object
-     * @throws EmployeeNotFoundException if the user is not found or password is
-     *                                   incorrect
-     */
-    public Employee authenticateUser(String email, String password) {
-        Employee employee = employeeRepository.findByEmail(email)
-                .orElseThrow(() -> new EmployeeNotFoundException("User not found with email: " + email));
-
-        // Check if the password matches
-        if (!passwordEncoder.matches(password, employee.getPassword())) {
-            throw new EmployeeNotFoundException("Invalid email or password");
+        if (userOpt.isPresent()) {
+            return userOpt.get();
         }
 
-        return employee; // Successfully authenticated
+        // If user doesn't exist, create a new one
+        Employee newUser = new Employee();
+        newUser.setEmail(email);
+        newUser.setName(name);
+        newUser.setRole(Role.USER); // Default role for Google users
+        newUser.setPassword(""); // No password needed for OAuth users
+        return employeeRepository.save(newUser);
     }
 
-    public Optional<Employee> getEmployeeByEmail(String email) {
-        return employeeRepository.findByEmail(email);
+    public Optional<Employee> findByEmail(String email) {
+        return Optional.ofNullable(employeeRepository.findByEmail(email)
+                .orElseThrow(() -> new EmployeeNotFoundException("User not found")));
+    }
+
+    public void registerAdmin(Employee employee) {
+        // Save admin logic
+        adminRepository.save(employee); // Assuming you have an Admin table/repository
     }
 
     public void registerEmployee(Employee employee) {
-        employeeRepository.save(employee);
+        // Save employee logic
+        employeeRepository.save(employee); // Assuming you have an Employee table/repository
     }
 
-    // Get all employees added by a specific admin
-    public List<Employee> getEmployeesByAdmin(Admin admin) {
-        return employeeRepository.findByAdmin(admin);
-    }
-
-    // Create an employee (similar to register but can be used for admin functions)
-    public Employee createEmployee(Employee employee) {
-        return employeeRepository.save(employee);
+    public void addEmployee(Employee employee) {
+        employeeRepository.save(employee); // Save the employee to the repository
     }
 
 }

@@ -18,7 +18,7 @@
 
         <!-- Search Employee -->
         <div class="mt-5">
-            <form action="/admin/salary-slips" method="get" class="flex justify-center">
+            <form action="/user/salary-slips" method="get" class="flex justify-center">
                 <input type="number" name="employeeId" placeholder="Enter Employee ID" required
                     class="px-4 py-2 border border-gray-300 rounded-l-md focus:outline-none">
                 <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-r-md hover:bg-blue-600">
@@ -38,8 +38,8 @@
             <p><strong>Net Salary:</strong> $<span th:text="${salarySlip.netSalary}"></span></p>
             <p><strong>Generated Date:</strong> <span th:text="${salarySlip.generatedDate}"></span></p>
 
-            <!-- Update Salary Slip -->
-            <form action="/admin/salary-slips/update" method="post" class="mt-4">
+            <!-- Update Salary Slip
+            <form action="/user/salary-slips/update" method="post" class="mt-4">
                 <input type="hidden" name="employeeId" th:value="${salarySlip.employee.id}">
                 <input type="number" name="newBaseSalary" placeholder="Enter New Salary" required
                     class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none w-full">
@@ -47,10 +47,10 @@
                     class="bg-green-500 text-white px-4 py-2 mt-2 w-full rounded-md hover:bg-green-600">
                     Update Salary Slip
                 </button>
-            </form>
+            </form> -->
 
             <!-- Export PDF -->
-            <a th:href="@{/admin/salary-slips/export/{employeeId}(employeeId=${salarySlip.employee.id})}"
+            <a th:href="@{/user/salary-slips/export/{employeeId}(employeeId=${salarySlip.employee.id})}"
                 class="bg-red-500 text-white px-4 py-2 mt-3 block text-center rounded-md hover:bg-red-600">
                 Export as PDF
             </a>

@@ -1,58 +1,86 @@
 package com.ps.employeepayroll.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import com.ps.employeepayroll.model.Employee;
+import com.ps.employeepayroll.service.EmployeeService;
+import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import com.ps.employeepayroll.model.Employee;
-import com.ps.employeepayroll.service.EmployeeService;
-
-import jakarta.validation.Valid;
-
 @Controller
 @RequestMapping("/auth")
 public class AuthController {
 
-    @Autowired
-    private EmployeeService userService;
+    private final EmployeeService employeeService;
+    private final PasswordEncoder passwordEncoder;
+
+    public AuthController(EmployeeService employeeService, BCryptPasswordEncoder passwordEncoder) {
+        this.employeeService = employeeService;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @GetMapping("/")
     public String index() {
-        return "index"; // Render the index page directly
+        return "index"; // Redirects to the homepage
     }
 
     @GetMapping("/signup")
-    public String signupForm(Model model) {
-        model.addAttribute("user", new Employee());
-        return "signup";
+    public String showSignupPage() {
+        return "signup"; // Renders the signup page
     }
 
     @PostMapping("/signup")
-    public String signup(@Valid @ModelAttribute("user") Employee user, BindingResult result, Model model) {
-        if (result.hasErrors()) {
-            return "signup";
+    public String processRegister(@Valid @ModelAttribute Employee employee,
+            BindingResult bindingResult,
+            HttpSession session,
+            Model model) {
+        System.out.println("Processing Employee Registration");
+
+        // Validate form data
+        if (bindingResult.hasErrors()) {
+            return "signup"; // Return back to signup page if errors
         }
 
-        try {
-            userService.registerEmployee(user);
-        } catch (Exception e) {
-            model.addAttribute("error", e.getMessage());
-            return "signup";
+        // Encrypt the password before saving
+        employee.setPassword(passwordEncoder.encode(employee.getPassword()));
+
+        // Save employee (either Admin or Employee)
+        if (employee.getRole().equals("ADMIN")) {
+            employeeService.registerAdmin(employee); // Method to save Admin
+        } else {
+            employeeService.registerEmployee(employee); // Method to save Employee
         }
 
-        // Redirect to login page
+        System.out.println("Employee saved: " + employee.getEmail());
+
+        // Success message
+        session.setAttribute("message", "Registration Successful! Please login.");
+
+        // Redirect to login page after successful registration
         return "redirect:/auth/login";
     }
 
-    @GetMapping("/admin/dashboard")
-    public String adminDashboard() {
-        return "admin_dashboard";
+    @RequestMapping("/admin/addEmployee")
+    public String addEmployee(@ModelAttribute Employee employee, HttpSession session, Model model) {
+        employee.setPassword(passwordEncoder.encode(employee.getPassword())); // Encrypt password before saving
+        employeeService.registerEmployee(employee); // Save employee to DB
+        session.setAttribute("message", "Employee added successfully");
+        return "redirect:/admin_dashboard"; // Redirect to admin dashboard
     }
 
-    @GetMapping("/user/dashboard")
-    public String userDashboard() {
-        return "user_dashboard";
-    }
+    // @GetMapping("/user/viewSalary")
+    // public String viewSalary(HttpSession session, Model model) {
+    // Employee loggedUser = (Employee) session.getAttribute("loggedUser");
+    // if (loggedUser != null) {
+    // Salary salary = employeeService.getSalary(loggedUser.getId());
+    // model.addAttribute("salary", salary);
+    // return "viewSalary"; // Render viewSalary page
+    // }
+    // return "redirect:/auth/login"; // Redirect to login if not logged in
+    // }
+
 }
